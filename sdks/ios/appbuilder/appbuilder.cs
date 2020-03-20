@@ -196,6 +196,8 @@ public class AppBuilder
 		for (int i = 0; i < lines.Length; ++i) {
 			string line = lines [i];
 			line = line.Replace ("TEAM_IDENTIFIER", team_identifier);
+			line = line.Replace ("BUNDLE_IDENTIFIER", bundle_identifier);
+			line = line.Replace ("APP_IDENTIFIER", "SGGM6D27TK");
 			lines [i] = line;
 		}
 		File.WriteAllLines (Path.Combine (builddir, "Entitlements.plist"), lines);
@@ -211,7 +213,7 @@ public class AppBuilder
 		ninja.WriteLine ($"apptemplate_dir = {apptemplatedir}");
 		ninja.WriteLine ($"appdir = {appdir}");
 		ninja.WriteLine ($"sysroot = {sysroot}");
-		ninja.WriteLine ($"cross = $mono_sdkdir/{cross_runtime}/bin/aarch64-darwin-mono-sgen");
+		ninja.WriteLine ($"cross = $mono_sdkdir/../runtime.ios.7-arm64.Microsoft.NETCore.Tool.MonoAOT.5.0.0-dev/tools/mono-aot-cross");
 		ninja.WriteLine ($"builddir = .");
 		if (aotdir != null)
 			ninja.WriteLine ($"aotdir = {aotdir}");
@@ -334,7 +336,7 @@ public class AppBuilder
 		ninja.WriteLine ("build $appdir: mkdir");
 
 		if (isdev) {
-			string libs = $"$mono_sdkdir/{runtime}/lib/libmonosgen-2.0.a";
+			string libs = $"$mono_sdkdir/../runtime.ios.7-arm64.Microsoft.NETCore.Runtime.Mono.5.0.0-dev/runtimes/ios.7-arm64/native/libmono.a";
 			if (isinterpany) {
 				libs += $" $mono_sdkdir/{runtime}/lib/libmono-ee-interp.a";
 				libs += $" $mono_sdkdir/{runtime}/lib/libmono-icall-table.a";
@@ -342,7 +344,7 @@ public class AppBuilder
 			}
 			ninja.WriteLine ($"build $appdir/{bundle_executable}: gen-exe {ofiles} $builddir/modules.o " + libs + (isnetcore ? " $apptemplate_dir/app-netcore-device.a" : " $apptemplate_dir/app-device.a"));
 			if (isnetcore)
-				ninja.WriteLine ($"    forcelibs = -force_load $mono_sdkdir/{runtime}/lib/System.Native.a -force_load $mono_sdkdir/{runtime}/lib/System.IO.Compression.Native.a -force_load $mono_sdkdir/{runtime}/lib/System.Security.Cryptography.Native.Apple.a");
+				ninja.WriteLine ($"    forcelibs = -force_load $mono_sdkdir/libSystem.Native.a -force_load $mono_sdkdir/libSystem.IO.Compression.Native.a -force_load $mono_sdkdir/libSystem.Security.Cryptography.Native.Apple.a");
 			else
 				ninja.WriteLine ($"    forcelibs = -force_load $mono_sdkdir/{runtime}/lib/libmono-native-unified.a");
 			ninja.WriteLine ("build $builddir/modules.o: compile-objc $builddir/modules.m");

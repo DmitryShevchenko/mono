@@ -51,8 +51,8 @@ ios_PLATFORM_BIN=$(XCODE_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/bin
 #
 define iOSDeviceTemplate
 
-_ios-$(1)_CC=$$(CCACHE) $$(ios_PLATFORM_BIN)/clang
-_ios-$(1)_CXX=$$(CCACHE) $$(ios_PLATFORM_BIN)/clang++
+_ios-$(1)_CC=$$(CCACHE)$$(ios_PLATFORM_BIN)/clang
+_ios-$(1)_CXX=$$(CCACHE)$$(ios_PLATFORM_BIN)/clang++
 
 _ios-$(1)_AC_VARS= \
 	ac_cv_c_bigendian=no \
@@ -284,8 +284,8 @@ endif
 #
 define iOSSimulatorTemplate
 
-_ios-$(1)_CC=$$(CCACHE) $$(ios_PLATFORM_BIN)/clang
-_ios-$(1)_CXX=$$(CCACHE) $$(ios_PLATFORM_BIN)/clang++
+_ios-$(1)_CC=$$(CCACHE)$$(ios_PLATFORM_BIN)/clang
+_ios-$(1)_CXX=$$(CCACHE)$$(ios_PLATFORM_BIN)/clang++
 
 _ios-$(1)_AC_VARS= \
 	ac_cv_func_clock_nanosleep=no \
@@ -432,8 +432,8 @@ define iOSCrossTemplate
 _ios-$(1)_OFFSETS_DUMPER_ARGS=--libclang="$$(XCODE_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/libclang.dylib" --sysroot="$(7)"
 _ios_$(1)_PLATFORM_BIN=$(XCODE_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/bin
 
-_ios-$(1)_CC=$$(CCACHE) $$(_ios_$(1)_PLATFORM_BIN)/clang
-_ios-$(1)_CXX=$$(CCACHE) $$(_ios_$(1)_PLATFORM_BIN)/clang++
+_ios-$(1)_CC=$$(CCACHE)$$(_ios_$(1)_PLATFORM_BIN)/clang
+_ios-$(1)_CXX=$$(CCACHE)$$(_ios_$(1)_PLATFORM_BIN)/clang++
 
 _ios-$(1)_AC_VARS= \
 	ac_cv_func_shm_open_working_with_mmap=no

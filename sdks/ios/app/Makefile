@@ -31,7 +31,11 @@ CC = $(XCODE_ROOT)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
 SIM_SYSROOT = $(XCODE_ROOT)/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk
 SIM_ARCH = x86_64
 SIM_CLASSIC_SDK_DIR = ../../out/ios-sim64-$(CONFIGURATION)
-SIM_NETCORE_SDK_DIR = ../../out/ios-netcore_sim64-$(CONFIGURATION)
+#SIM_NETCORE_SDK_DIR = ../../out/ios-netcore_sim64-$(CONFIGURATION)
+SIM_NETCORE_LIBRARIES_DIR = /Users/alexander/Desktop/ios/release/netcoreapp5.0-iOS-Release-x64
+SIM_NETCORE_INCLUDE_DIR = /Users/alexander/Desktop/ios/release/runtime.ios.8-x64.Microsoft.NETCore.Runtime.Mono.5.0.0-dev/tools/include
+SIM_NETCORE_RUNTIME_DIR = /Users/alexander/Desktop/ios/release/runtime.ios.8-x64.Microsoft.NETCore.Runtime.Mono.5.0.0-dev/runtimes/ios.8-x64/native
+
 SIM_CFLAGS = \
 	-std=gnu11 \
 	-fobjc-arc \
@@ -64,13 +68,13 @@ endif
 ifdef ENABLE_NETCORE
 SIM_NETCORE_LDFLAGS = \
 	$(foreach u,$(UNREFERENCED_SYMBOLS_COMMON),-u $u)  \
-	$(SIM_NETCORE_SDK_DIR)/lib/libmonosgen-2.0.a \
-	-force_load $(SIM_NETCORE_SDK_DIR)/lib/System.Native.a \
-	-force_load $(SIM_NETCORE_SDK_DIR)/lib/System.IO.Compression.Native.a \
-	-force_load $(SIM_NETCORE_SDK_DIR)/lib/System.Security.Cryptography.Native.Apple.a
+	$(SIM_NETCORE_RUNTIME_DIR)/libmono.a \
+	-force_load $(SIM_NETCORE_LIBRARIES_DIR)/libSystem.Native.a \
+	-force_load $(SIM_NETCORE_LIBRARIES_DIR)/libSystem.IO.Compression.Native.a \
+	-force_load $(SIM_NETCORE_LIBRARIES_DIR)/libSystem.Security.Cryptography.Native.Apple.a
 
 sim-netcore-%.o: %.m
-	$(ENV) $(CC) -arch $(SIM_ARCH) $(SIM_CFLAGS) -I$(SIM_NETCORE_SDK_DIR)/include/mono-2.0 -c -o $@ $^
+	$(ENV) $(CC) -arch $(SIM_ARCH) $(SIM_CFLAGS) -I$(SIM_NETCORE_INCLUDE_DIR)/mono-2.0 -c -o $@ $^
 
 app-netcore-simulator: sim-netcore-main.o sim-netcore-runtime.o
 	$(ENV) $(CC) -arch $(SIM_ARCH) $(SIM_LDFLAGS) $(SIM_NETCORE_LDFLAGS) -o $@ $^
@@ -79,7 +83,8 @@ endif
 
 DEV_ARCH = arm64
 DEV_CLASSIC_SDK_DIR = ../../out/ios-target64-$(CONFIGURATION)
-DEV_NETCORE_SDK_DIR = ../../out/ios-netcore_target64-$(CONFIGURATION)
+#DEV_NETCORE_SDK_DIR = ../../out/ios-netcore_target64-$(CONFIGURATION)
+DEV_NETCORE_INCLUDE_DIR = /Users/alexander/Desktop/ios/release/runtime.ios.7-arm64.Microsoft.NETCore.Runtime.Mono.5.0.0-dev/tools/include
 DEV_SYSROOT = $(XCODE_ROOT)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/
 DEV_CFLAGS = \
 	-isysroot $(DEV_SYSROOT) \
@@ -100,7 +105,7 @@ endif
 
 ifdef ENABLE_NETCORE
 dev-netcore-%.o: %.m
-	$(ENV) $(CC) -arch $(DEV_ARCH) $(DEV_CFLAGS) -I$(DEV_NETCORE_SDK_DIR)/include/mono-2.0 -DENABLE_NETCORE -c -o $@ $^
+	$(ENV) $(CC) -arch $(DEV_ARCH) $(DEV_CFLAGS) -I$(DEV_NETCORE_INCLUDE_DIR)/mono-2.0 -DENABLE_NETCORE -c -o $@ $^
 
 app-netcore-device.a: dev-netcore-main.o dev-netcore-runtime.o
 	libtool -static -o $@ $^

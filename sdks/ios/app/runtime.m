@@ -222,9 +222,9 @@ log_callback (const char *log_domain, const char *log_level, const char *message
 static void
 register_dllmap (void)
 {
-	mono_dllmap_insert (NULL, "System.Native", NULL, "__Internal", NULL);
-	mono_dllmap_insert (NULL, "System.IO.Compression.Native", NULL, "__Internal", NULL);
-	mono_dllmap_insert (NULL, "System.Security.Cryptography.Native.Apple", NULL, "__Internal", NULL);
+	mono_dllmap_insert (NULL, "libSystem.Native", NULL, "__Internal", NULL);
+	mono_dllmap_insert (NULL, "libSystem.IO.Compression.Native", NULL, "__Internal", NULL);
+	mono_dllmap_insert (NULL, "libSystem.Security.Cryptography.Native.Apple", NULL, "__Internal", NULL);
 }
 
 /* Implemented by generated code */

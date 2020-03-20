@@ -252,6 +252,7 @@ public class Harness
 		// -a args
 		// -u unbuffered stdout
 		// -L launch app
+		// -d -n -m 
 		//
 		string exe = "ios-deploy";
 		string args = "-v -L -u -b " + bundle_dir + " -a '" + app_args + "'";
