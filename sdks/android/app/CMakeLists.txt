@@ -19,6 +19,8 @@ add_library( # Sets the name of the library.
              # Provides a relative path to your source file(s).
              src/main/c/runtime-bootstrap.c )
 
+add_definitions(-DENABLE_NETCORE)
+
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
 # default, you only need to specify the name of the public NDK library
@@ -35,15 +37,14 @@ find_library( # Sets the name of the path variable.
 # Specifies libraries CMake should link to your target library. You
 # can link multiple libraries, such as libraries you define in this
 # build script, prebuilt third-party libraries, or system libraries.
-
 target_link_libraries( # Specifies the target library.
                        runtime-bootstrap
 
                        # Specifies the mono libraries
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libmonosgen-2.0.so
-                       ${CMAKE_CURRENT_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libMonoPosixHelper.so
-                       ${CMAKE_CURRENT_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libmono-native.so
-                       ${CMAKE_CURRENT_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libmono-btls-shared.so
+                       ${CMAKE_CURRENT_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libSystem.Native.so
+                       ${CMAKE_CURRENT_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libSystem.IO.Compression.Native.so
+                       ${CMAKE_CURRENT_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libSystem.Globalization.Native.so
 
                        # Links the target library to the log library
                        # included in the NDK.

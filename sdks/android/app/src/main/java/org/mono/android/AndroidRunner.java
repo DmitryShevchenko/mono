@@ -26,6 +26,7 @@ public class AndroidRunner extends Instrumentation
 
 	String testsuite;
 	boolean waitForLLDB;
+	int result = 1;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -99,16 +100,18 @@ public class AndroidRunner extends Instrumentation
 		}
 
 		if (testsuite.startsWith("debugger:")) {
-			runTests (filesDir, cacheDir, nativeLibraryDir, assemblyDir, "tests/" + testsuite.substring(9), true, false, waitForLLDB);
+			result = runTests (filesDir, cacheDir, nativeLibraryDir, assemblyDir, "tests/" + testsuite.substring(9), true, false, false, waitForLLDB);
 		} else if (testsuite.startsWith("profiler:")) {
-			runTests (filesDir, cacheDir, nativeLibraryDir, assemblyDir, "tests/" + testsuite.substring(9), false, true, waitForLLDB);
+			result = runTests (filesDir, cacheDir, nativeLibraryDir, assemblyDir, "tests/" + testsuite.substring(9), false, true, false, waitForLLDB);
+		} else if (testsuite.startsWith("netcore:")) {
+			result = runTests (filesDir, cacheDir, nativeLibraryDir, assemblyDir, "tests/" + testsuite.substring(8), false, false, true, waitForLLDB);
 		} else {
-			runTests (filesDir, cacheDir, nativeLibraryDir, assemblyDir, "tests/" + testsuite, false, false, waitForLLDB);
+			result = runTests (filesDir, cacheDir, nativeLibraryDir, assemblyDir, "tests/" + testsuite, false, false, false, waitForLLDB);
 		}
 
 		runOnMainSync (new Runnable () {
 			public void run() {
-				finish (0, null);
+				finish (result, null);
 			}
 		});
 	}
@@ -148,7 +151,7 @@ public class AndroidRunner extends Instrumentation
 		out.close ();
 	}
 
-	native void runTests (String filesDir, String cacheDir, String dataDir, String assemblyDir, String assemblyName, boolean isDebugger, boolean isProfiler, boolean waitForLLDB);
+	native int runTests (String filesDir, String cacheDir, String dataDir, String assemblyDir, String assemblyName, boolean isDebugger, boolean isProfiler, boolean isNetcore, boolean waitForLLDB);
 
 	static void WriteLineToInstrumentation (String line)
 	{

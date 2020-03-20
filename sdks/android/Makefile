@@ -72,52 +72,89 @@ local.properties:
 
 ## Directories
 
-app/assets/asm app/src/main/jniLibs/armeabi-v7a app/src/main/jniLibs/arm64-v8a app/src/main/jniLibs/x86 app/src/main/jniLibs/x86_64 app/assets/armeabi-v7a app/assets/arm64-v8a app/assets/x86 app/assets/x86_64:
+app/assets/asm app/assets/asm/tests app/src/main/jniLibs/armeabi-v7a app/src/main/jniLibs/arm64-v8a app/src/main/jniLibs/x86 app/src/main/jniLibs/x86_64 app/assets/armeabi-v7a app/assets/arm64-v8a app/assets/x86 app/assets/x86_64:
 	mkdir -p $@
 
 ## Package the monosgen-2.0, MonoPosixHelper and mono-native libraries
 
-MONO_LIBS= \
-	libmonosgen-2.0.so \
-	libMonoPosixHelper.so \
-	libmono-btls-shared.so \
-	libmono-native.so
+RUNTIME_LIBS= \
+	libmonosgen-2.0.so
 
-$(patsubst %,app/src/main/jniLibs/armeabi-v7a/%,$(MONO_LIBS)): app/src/main/jniLibs/armeabi-v7a/%: $(SDK_OUT_PREFIX)-armeabi-v7a-$(CONFIGURATION)/lib/% | app/src/main/jniLibs/armeabi-v7a
+BCL_LIBS= \
+	libSystem.IO.Compression.Native.so \
+	libSystem.Globalization.Native.so \
+	libSystem.Native.so
+
+#	libMonoPosixHelper.so \
+#	libmono-btls-shared.so \
+#	libmono-native.so
+
+ifdef DEVICE
+BCL_DIR=/Users/alexander/Desktop/android/release/netcoreapp5.0-Android-Release-arm64
+RUNTIME_DIR=/Users/alexander/Desktop/android/release/runtime.android.21-arm64.Microsoft.NETCore.Runtime.Mono.5.0.0-dev/runtimes/android.21-arm64/native
+SPC_DIR=/Users/alexander/Desktop/android/release/runtime.android.21-arm64.Microsoft.NETCore.Runtime.Mono.5.0.0-dev/runtimes/android.21-arm64/lib/netstandard1.0
+else
+BCL_DIR=/Users/alexander/Desktop/android/release/netcoreapp5.0-Android-Release-x64
+RUNTIME_DIR=/Users/alexander/Desktop/android/release/runtime.android.21-x64.Microsoft.NETCore.Runtime.Mono.5.0.0-dev/runtimes/android.21-x64/native
+SPC_DIR=/Users/alexander/Desktop/android/release/runtime.android.21-x64.Microsoft.NETCore.Runtime.Mono.5.0.0-dev/runtimes/android.21-x64/lib/netstandard1.0
+endif
+
+#$(patsubst %,app/src/main/jniLibs/armeabi-v7a/%,$(MONO_LIBS)): app/src/main/jniLibs/armeabi-v7a/%: $(SDK_OUT_PREFIX)-armeabi-v7a-$(CONFIGURATION)/lib/% | app/src/main/jniLibs/armeabi-v7a
+#	cp $< $@
+
+#.stamp-package: $(patsubst %,app/src/main/jniLibs/armeabi-v7a/%,$(MONO_LIBS))
+
+#$(patsubst %,app/src/main/jniLibs/arm64-v8a/%,$(MONO_LIBS)): app/src/main/jniLibs/arm64-v8a/%: $(SDK_OUT_PREFIX)-arm64-v8a-$(CONFIGURATION)/lib/% | app/src/main/jniLibs/arm64-v8a
+#	cp $< $@
+
+#.stamp-package: $(patsubst %,app/src/main/jniLibs/arm64-v8a/%,$(MONO_LIBS))
+
+#$(patsubst %,app/src/main/jniLibs/x86/%,$(MONO_LIBS)): app/src/main/jniLibs/x86/%: $(SDK_OUT_PREFIX)-x86-$(CONFIGURATION)/lib/% | app/src/main/jniLibs/x86
+#	cp $< $@
+
+#.stamp-package: $(patsubst %,app/src/main/jniLibs/x86/%,$(MONO_LIBS))
+
+ifdef DEVICE
+
+$(patsubst %,app/src/main/jniLibs/arm64-v8a/%,$(RUNTIME_LIBS)): app/src/main/jniLibs/arm64-v8a/%: $(RUNTIME_DIR)/% | app/src/main/jniLibs/arm64-v8a
 	cp $< $@
 
-.stamp-package: $(patsubst %,app/src/main/jniLibs/armeabi-v7a/%,$(MONO_LIBS))
-
-$(patsubst %,app/src/main/jniLibs/arm64-v8a/%,$(MONO_LIBS)): app/src/main/jniLibs/arm64-v8a/%: $(SDK_OUT_PREFIX)-arm64-v8a-$(CONFIGURATION)/lib/% | app/src/main/jniLibs/arm64-v8a
+$(patsubst %,app/src/main/jniLibs/arm64-v8a/%,$(BCL_LIBS)): app/src/main/jniLibs/arm64-v8a/%: $(BCL_DIR)/% | app/src/main/jniLibs/arm64-v8a
 	cp $< $@
 
-.stamp-package: $(patsubst %,app/src/main/jniLibs/arm64-v8a/%,$(MONO_LIBS))
+.stamp-package: $(patsubst %,app/src/main/jniLibs/arm64-v8a/%,$(RUNTIME_LIBS)) $(patsubst %,app/src/main/jniLibs/arm64-v8a/%,$(BCL_LIBS))
+else
 
-$(patsubst %,app/src/main/jniLibs/x86/%,$(MONO_LIBS)): app/src/main/jniLibs/x86/%: $(SDK_OUT_PREFIX)-x86-$(CONFIGURATION)/lib/% | app/src/main/jniLibs/x86
+$(patsubst %,app/src/main/jniLibs/x86_64/%,$(RUNTIME_LIBS)): app/src/main/jniLibs/x86_64/%: $(RUNTIME_DIR)/% | app/src/main/jniLibs/x86_64
 	cp $< $@
 
-.stamp-package: $(patsubst %,app/src/main/jniLibs/x86/%,$(MONO_LIBS))
-
-$(patsubst %,app/src/main/jniLibs/x86_64/%,$(MONO_LIBS)): app/src/main/jniLibs/x86_64/%: $(SDK_OUT_PREFIX)-x86_64-$(CONFIGURATION)/lib/% | app/src/main/jniLibs/x86_64
+$(patsubst %,app/src/main/jniLibs/x86_64/%,$(BCL_LIBS)): app/src/main/jniLibs/x86_64/%: $(BCL_DIR)/% | app/src/main/jniLibs/x86_64
 	cp $< $@
 
-.stamp-package: $(patsubst %,app/src/main/jniLibs/x86_64/%,$(MONO_LIBS))
+.stamp-package: $(patsubst %,app/src/main/jniLibs/x86_64/%,$(RUNTIME_LIBS)) $(patsubst %,app/src/main/jniLibs/x86_64/%,$(BCL_LIBS))
+endif
 
 ## Package Mono.Android.dll
 
 app/assets/asm/Mono.Android.dll: managed/fake-monodroid.cs | app/assets/asm
-	csc /nostdlib /noconfig /langversion:latest /t:library /out:$@ $(patsubst %,-r:$(TOP)/sdks/out/android-bcl/monodroid/%.dll,mscorlib System System.Core) $<
+	csc /nostdlib /noconfig /langversion:latest /t:library /out:$@ -r:$(SPC_DIR)/System.Private.CoreLib.dll $<
 
-.stamp-package: app/assets/asm/Mono.Android.dll
+app/assets/asm/tests/TestRunner.exe: managed/runner.cs | app/assets/asm/tests
+	csc /nostdlib /noconfig /langversion:latest /out:$@ -r:$(SPC_DIR)/System.Private.CoreLib.dll $(patsubst %,-r:$(BCL_DIR)/%.dll, System.Runtime System.Net.Sockets System.Runtime.InteropServices.RuntimeInformation) $<
+
+.stamp-package: app/assets/asm/Mono.Android.dll app/assets/asm/tests/TestRunner.exe
 
 ## Package the BCL
 
-BCL=$(patsubst $(TOP)/sdks/out/android-bcl/monodroid/%,%,$(shell find $(TOP)/sdks/out/android-bcl/monodroid -type f))
+BCL=$(patsubst $(BCL_DIR)/%,%,$(shell find $(BCL_DIR) -type f -name "*.dll"))
 
-$(patsubst %,app/assets/asm/%,$(BCL)): app/assets/asm/%: $(TOP)/sdks/out/android-bcl/monodroid/% | app/assets/asm
-	cp -R $(TOP)/sdks/out/android-bcl/monodroid/* app/assets/asm
+$(patsubst %,app/assets/asm/%,$(BCL)): app/assets/asm/%: $(BCL_DIR)/% | app/assets/asm
+	cp -R $(BCL_DIR)/*.dll app/assets/asm
 
-.stamp-package: $(patsubst %,app/assets/asm/%,$(BCL))
+app/assets/asm/System.Private.CoreLib.dll: $(SPC_DIR)/System.Private.CoreLib.dll | app/assets/asm
+	cp $(SPC_DIR)/System.Private.CoreLib.dll app/assets/asm
+
+.stamp-package: $(patsubst %,app/assets/asm/%,$(BCL)) app/assets/asm/System.Private.CoreLib.dll
 
 ## Package LLDB
 
@@ -125,29 +162,29 @@ lldb-mono-0.1:
 	wget --no-verbose -O - 'https://github.com/mono/lldb-binaries/releases/download/v0.1/lldb-mono-0.1.tar.gz' | tar xvfz -
 
 #FIXME: armeabi-v7a in place of armeabi
-lldb-mono-0.1/android/armeabi/lldb-server: | lldb-mono-0.1
+#lldb-mono-0.1/android/armeabi/lldb-server: | lldb-mono-0.1
 
-app/assets/armeabi-v7a/lldb-server: lldb-mono-0.1/android/armeabi/lldb-server | app/assets/armeabi-v7a
-	cp $< $@
-	chmod 777 $@
+#app/assets/armeabi-v7a/lldb-server: lldb-mono-0.1/android/armeabi/lldb-server | app/assets/armeabi-v7a
+#	cp $< $@
+#	chmod 777 $@
 
-.stamp-package: app/assets/armeabi-v7a/lldb-server
+#.stamp-package: app/assets/armeabi-v7a/lldb-server
 
-lldb-mono-0.1/android/arm64-v8a/lldb-server: | lldb-mono-0.1
+#lldb-mono-0.1/android/arm64-v8a/lldb-server: | lldb-mono-0.1
 
-app/assets/arm64-v8a/lldb-server: lldb-mono-0.1/android/arm64-v8a/lldb-server | app/assets/arm64-v8a
-	cp $< $@
-	chmod 777 $@
+#app/assets/arm64-v8a/lldb-server: lldb-mono-0.1/android/arm64-v8a/lldb-server | app/assets/arm64-v8a
+#	cp $< $@
+#	chmod 777 $@
 
-.stamp-package: app/assets/arm64-v8a/lldb-server
+#.stamp-package: app/assets/arm64-v8a/lldb-server
 
-lldb-mono-0.1/android/x86/lldb-server: | lldb-mono-0.1
+#lldb-mono-0.1/android/x86/lldb-server: | lldb-mono-0.1
 
-app/assets/x86/lldb-server: lldb-mono-0.1/android/x86/lldb-server | app/assets/x86
-	cp $< $@
-	chmod 777 $@
+#app/assets/x86/lldb-server: lldb-mono-0.1/android/x86/lldb-server | app/assets/x86
+#	cp $< $@
+#	chmod 777 $@
 
-.stamp-package: app/assets/x86/lldb-server
+#.stamp-package: app/assets/x86/lldb-server
 
 lldb-mono-0.1/android/x86_64/lldb-server: | lldb-mono-0.1
 

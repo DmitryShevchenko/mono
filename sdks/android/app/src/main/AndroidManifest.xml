@@ -1,22 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.mono.android.AndroidTestRunner">
+    package="org.mono.android.AndroidTestRunner"
+    android:versionCode="1"
+    android:versionName="1.0" >
 
-  <uses-sdk
-      android:minSdkVersion="14" />
-  <uses-permission
-      android:name="android.permission.INTERNET"/>
+    <uses-sdk
+        android:minSdkVersion="15"
+        android:targetSdkVersion="28" />
 
-  <application>
-    <activity android:name="org.mono.android.AndroidActivity">
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN" />
-          <category android:name="android.intent.category.LAUNCHER" />
-      </intent-filter>
-    </activity>
-  </application>
+    <uses-permission android:name="android.permission.INTERNET" />
 
-  <instrumentation
-      android:name="org.mono.android.AndroidRunner"
-      android:targetPackage="org.mono.android.AndroidTestRunner" />
+    <instrumentation
+        android:name="org.mono.android.AndroidRunner"
+        android:targetPackage="org.mono.android.AndroidTestRunner" />
+
+    <application android:debuggable="true" >
+        <activity android:name="org.mono.android.AndroidActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
 </manifest>

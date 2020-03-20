@@ -83,6 +83,8 @@ typedef void* (*MonoDlFallbackClose) (void *handle, void *user_data);
 
 typedef void *(*mono_dl_fallback_register_fn) (MonoDlFallbackLoad load_func, MonoDlFallbackSymbol symbol_func, MonoDlFallbackClose close_func, void *user_data);
 
+typedef void  (*MonoUnhandledExceptionFunc)         (MonoObject *exc, void *user_data);
+
 typedef MonoDomain* (*mono_jit_init_version_fn) (const char *root_domain_name, const char *runtime_version);
 typedef MonoAssembly* (*mono_assembly_open_fn) (const char *filename, MonoImageOpenStatus *status);
 typedef void (*mono_set_assemblies_path_fn) (const char* path);
@@ -96,6 +98,11 @@ typedef void (*mono_set_signal_chaining_fn) (int);
 typedef MonoThread *(*mono_thread_attach_fn) (MonoDomain *domain);
 typedef void (*mono_domain_set_config_fn) (MonoDomain *, const char *, const char *);
 typedef int (*mono_runtime_set_main_args_fn) (int argc, char* argv[]);
+typedef int (*mono_jit_exec_fn) (MonoDomain *domain, MonoAssembly *assembly, int argc, char* argv[]);
+typedef MonoDomain* (*mono_domain_get_fn) ();
+typedef void (*mono_print_unhandled_exception_fn) (MonoObject* exc);
+typedef void (*mono_install_unhandled_exception_hook_fn) (MonoUnhandledExceptionFunc func, void *user_data);
+typedef void* (*mono_object_unbox_fn) (MonoObject *obj);
 typedef void (*mono_trace_init_fn) (void);
 typedef void (*mono_trace_set_log_handler_fn) (MonoLogCallback callback, void *user_data);
 typedef void (*mono_jit_parse_options_fn) (int argc, char * argv[]);
@@ -124,6 +131,11 @@ static mono_dl_fallback_register_fn mono_dl_fallback_register;
 static mono_thread_attach_fn mono_thread_attach;
 static mono_domain_set_config_fn mono_domain_set_config;
 static mono_runtime_set_main_args_fn mono_runtime_set_main_args;
+static mono_jit_exec_fn mono_jit_exec;
+static mono_domain_get_fn mono_domain_get;
+static mono_print_unhandled_exception_fn mono_print_unhandled_exception;
+static mono_install_unhandled_exception_hook_fn mono_install_unhandled_exception_hook;
+static mono_object_unbox_fn mono_object_unbox;
 static mono_trace_init_fn mono_trace_init;
 static mono_trace_set_log_handler_fn mono_trace_set_log_handler;
 static mono_jit_parse_options_fn mono_jit_parse_options;
@@ -137,7 +149,9 @@ static mono_jit_set_aot_mode_fn mono_jit_set_aot_mode;
 
 static MonoAssembly *main_assembly;
 static void *runtime_bootstrap_dso;
+#ifndef ENABLE_NETCORE
 static void *mono_posix_helper_dso;
+#endif
 
 static jclass AndroidRunner_klass = NULL;
 static jmethodID AndroidRunner_WriteLineToInstrumentation_method = NULL;
@@ -328,9 +342,17 @@ create_and_set (const char *home, const char *relativePath, const char *envvar)
 	free (dir);
 }
 
-void
+static void
+unhandled_exception_handler (MonoObject *exc, void *user_data)
+{
+	_log ("EXCEPTION: !!!!!");
+	mono_print_unhandled_exception(exc);
+	_exit (1);
+}
+
+int
 Java_org_mono_android_AndroidRunner_runTests (JNIEnv* env, jobject thiz, jstring j_files_dir, jstring j_cache_dir,
-	jstring j_native_library_dir, jstring j_assembly_dir, jstring j_assembly_name, jboolean is_debugger, jboolean is_profiler, jboolean wait_for_lldb)
+	jstring j_native_library_dir, jstring j_assembly_dir, jstring j_assembly_name, jboolean is_debugger, jboolean is_profiler, jboolean is_netcore, jboolean wait_for_lldb)
 {
 	MonoDomain *root_domain;
 	MonoMethod *run_tests_method;
@@ -356,6 +378,7 @@ Java_org_mono_android_AndroidRunner_runTests (JNIEnv* env, jobject thiz, jstring
 	_log ("-- assembly name %s", assembly_name);
 	_log ("-- is debugger %d", is_debugger);
 	_log ("-- is profiler %d", is_profiler);
+	_log ("-- is netcore %d", is_netcore);
 	prctl (PR_SET_DUMPABLE, 1);
 
 	snprintf (buff, sizeof(buff), "%s/libmonosgen-2.0.so", native_library_dir);
@@ -398,6 +421,11 @@ Java_org_mono_android_AndroidRunner_runTests (JNIEnv* env, jobject thiz, jstring
 	DLSYM (mono_trace_init);
 	DLSYM (mono_trace_set_log_handler);
 	DLSYM (mono_jit_set_aot_mode);
+	DLSYM (mono_jit_exec);
+	DLSYM (mono_domain_get);
+	DLSYM (mono_print_unhandled_exception);
+	DLSYM (mono_install_unhandled_exception_hook);
+	DLSYM (mono_object_unbox);
 
 #undef DLSYM
 
@@ -419,6 +447,8 @@ Java_org_mono_android_AndroidRunner_runTests (JNIEnv* env, jobject thiz, jstring
 	/* uncomment to enable interpreter */
 	// mono_jit_set_aot_mode (1000 /* MONO_EE_MODE_INTERP */);
 
+	mono_install_unhandled_exception_hook (unhandled_exception_handler, NULL);
+
 	mono_trace_init ();
 	mono_trace_set_log_handler (_runtime_log, NULL);
 
@@ -432,6 +462,7 @@ Java_org_mono_android_AndroidRunner_runTests (JNIEnv* env, jobject thiz, jstring
 	sprintf (buff, "%s/libruntime-bootstrap.so", native_library_dir);
 	runtime_bootstrap_dso = dlopen (buff, RTLD_LAZY);
 
+#ifndef ENABLE_NETCORE
 	sprintf (buff, "%s/libMonoPosixHelper.so", native_library_dir);
 	mono_posix_helper_dso = dlopen (buff, RTLD_LAZY);
 
@@ -439,6 +470,7 @@ Java_org_mono_android_AndroidRunner_runTests (JNIEnv* env, jobject thiz, jstring
 
 	mono_dllmap_insert (NULL, "System.Native", NULL, buff, NULL);
 	mono_dllmap_insert (NULL, "System.Net.Security.Native", NULL, buff, NULL);
+#endif
 
 	if (wait_for_lldb)
 		mini_parse_debug_option ("lldb");
@@ -493,6 +525,34 @@ Java_org_mono_android_AndroidRunner_runTests (JNIEnv* env, jobject thiz, jstring
 		// TODO: profiler
 		_log ("Unsupported profiler");
 		_exit (1);
+	} else if (is_netcore) {
+		sprintf (buff, "%s/%s", assembly_dir, assembly_name);
+		main_assembly = mono_assembly_open (buff, NULL);
+		if (!main_assembly) {
+			_log ("Unknown assembly \"%s\"", buff);
+			_exit (1);
+		}
+
+		MonoClass *runner_class = mono_class_from_name (mono_assembly_get_image (main_assembly), "Mono", "TestRunner");
+		if (!runner_class) {
+			_log ("Unknown class \"Mono.TestRunner\"");
+			_exit (1);
+		}
+
+		MonoMethod *main_method = mono_class_get_method_from_name (runner_class, "Main", 0);
+		if (!main_method) {
+			_log ("Unknown method \"Main\"");
+			_exit (1);
+		}
+
+		MonoObject* res = mono_runtime_invoke (main_method, NULL, NULL, NULL);
+		int int_result = *(int*)mono_object_unbox (res);
+
+		_log ("RESULT: %i", int_result);
+
+		mono_jit_cleanup (root_domain);
+
+		return int_result;
 	} else {
 		char *argv[] = { "nunitlite.dll" };
 		mono_runtime_set_main_args (1, argv);
@@ -520,6 +580,8 @@ Java_org_mono_android_AndroidRunner_runTests (JNIEnv* env, jobject thiz, jstring
 		void *args[] = { mono_string_new (root_domain, buff) };
 		mono_runtime_invoke (run_tests_method, NULL, args, NULL);
 	}
+
+	return 0;
 }
 
 static int
@@ -566,8 +628,10 @@ my_dlsym (void *handle, const char *name, char **err, void *user_data)
 
 	if (handle == INTERNAL_LIB_HANDLE) {
 		s = dlsym (runtime_bootstrap_dso, name);
+#ifndef ENABLE_NETCORE
 		if (!s && mono_posix_helper_dso)
 			s = dlsym (mono_posix_helper_dso, name);
+#endif
 	} else {
 		s = dlsym (handle, name);
 	}
@@ -742,6 +806,13 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	*dns_servers_array = (void*)ret;
 	return count;
 }
+
+MONO_API void
+simple_log (char* message)
+{
+	_log(message);
+}
+
 
 static int initialized = 0;
 

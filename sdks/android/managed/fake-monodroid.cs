@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 	
 namespace Android.Runtime {
@@ -71,10 +70,12 @@ namespace Android.Runtime {
 			return true;
 		}
 
+#if false
 		static IWebProxy GetDefaultProxy ()
 		{
 			return null;
 		}
+#endif
 
 		static byte[] CertStoreLookup (long _1, bool _2)
 		{

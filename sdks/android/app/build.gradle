@@ -15,9 +15,15 @@ android {
             }
         }
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            abiFilters 'x86_64' //'x86_64', 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
         }
     }
+// debuggable=true changes the Android loader to permit arbitrary .so names, in release mode only lib<XXX>.so is allowed
+//    buildTypes {
+//        debug {
+//            debuggable false
+//        }
+//    }
     sourceSets {
         main {
             assets.srcDirs = ['assets']
@@ -35,7 +41,4 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
